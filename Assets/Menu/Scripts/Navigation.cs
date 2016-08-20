@@ -58,6 +58,7 @@ public class Navigation : MonoBehaviour {
     {
         CancelInvoke("Next");
         Debug.Log("Play from: " + name);
+        ScoreManager.instance.Reset();
         if (play != "")
         {
             LevelManager.instance.LoadLevel(play);

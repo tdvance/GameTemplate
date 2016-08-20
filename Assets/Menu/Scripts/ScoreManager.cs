@@ -14,28 +14,33 @@ public class ScoreManager : MonoBehaviour {
 
     //high score list
     public int maxHighScores = 10;
-    private int[] highScores;
-
-    //update high scores, if needed, this often rather than every frame.
-    public float highScoreInterval = 30f;
-
-    //lowest high score; if score exceeds this, time to update.
-    private int highScoreThreshold = 0;
-
-    //when true, don't invoke UpdateHighScores a second time.
-    private bool updatingHighScores = false;
-
+    private int[] _highScores;
+    
     // Use this for initialization
     void Start()
     {
         highScoresPath = Application.persistentDataPath + highScoresName;
-        Reset();
+        if (maxHighScores < 1)
+        {
+            maxHighScores = 1;//TODO allow disabling high scores
+        }
+        _highScores = new int[maxHighScores];
+
         UpdateHighScores();
     }
 
     // Update is called once per frame
     void Update()
     {
+
+    }
+
+    public int[] highScores
+    {
+        get
+        {
+            return _highScores;
+        }
 
     }
 
@@ -51,49 +56,57 @@ public class ScoreManager : MonoBehaviour {
     public void Add(int points)
     {
         _score += points;
-        if(_score > highScoreThreshold && !updatingHighScores)
+    }
+
+    public void ClearHighScores()
+    {
+        Debug.Log("Clearing high scores");
+        for (int i = 0; i < highScores.Length; i++)
         {
-            updatingHighScores = true;
-            Invoke("UpdateHighScores", highScoreInterval);
+            highScores[i] = 0;
+        }
+        if (File.Exists(highScoresPath))
+        {
+            File.Delete(highScoresPath);
         }
     }
 
     public void UpdateHighScores()
     {
         CancelInvoke("UpdateHighScores");//cancel pending calls
-
-        if (maxHighScores < 1)
-        {
-            maxHighScores = 1;//TODO allow disabling high scores
-        }
-        highScores = new int[maxHighScores];
+        Debug.Log("UpdateHighScores called from " + name);
 
         //load high score list if it exists
         BinaryFormatter bf = new BinaryFormatter();
+        int[] hs;
         if (File.Exists(highScoresPath))
         {
             //load high scores
+            Debug.Log("Loading previous high scores");
             FileStream infile = File.Open(highScoresPath, FileMode.Open);
-            int[] hs = (int[])bf.Deserialize(infile);
+            hs = (int[])bf.Deserialize(infile);
             infile.Close();
-
-            //merge with current high scores and current score
-            int[] allScores = new int[highScores.Length + hs.Length + 1];
-            Array.Copy(hs, allScores, hs.Length);
-            Array.Copy(highScores, 0, allScores, hs.Length, highScores.Length);
-            Array.Sort(allScores);
-            Array.Reverse(allScores);
-            Array.Copy(allScores, highScores, highScores.Length);
-            allScores[allScores.Length - 1] = score;
-
-            //save high scores
-            BinaryFormatter outBf = new BinaryFormatter();
-            FileStream file = File.Open(highScoresPath, FileMode.OpenOrCreate);
-            bf.Serialize(file, highScores);
-            file.Close();
+            Debug.Log("Loaded: " + hs);
         }
-        highScoreThreshold = highScores[highScores.Length - 1];
-        updatingHighScores = false;
+        else
+        {
+            hs = new int[1];
+        }
+        //merge with current high scores and current score
+        int[] allScores = new int[highScores.Length + hs.Length + 1];
+        Array.Copy(hs, allScores, hs.Length);
+        Array.Copy(highScores, 0, allScores, hs.Length, highScores.Length);
+        allScores[allScores.Length - 1] = score;
+        Array.Sort(allScores);
+        Array.Reverse(allScores);
+        Array.Copy(allScores, highScores, highScores.Length);
+        Debug.Log("Merged with current: " + allScores);
+
+        //save high scores
+        FileStream file = File.Open(highScoresPath, FileMode.OpenOrCreate);
+        bf.Serialize(file, highScores);
+        file.Close();
+        Debug.Log("High scores saved to " + highScoresPath);
     }
 
     public void Reset()
@@ -119,7 +132,7 @@ public class ScoreManager : MonoBehaviour {
         }
     }
 
-
+   
     void Awake()
     {
         if (_instance == null)

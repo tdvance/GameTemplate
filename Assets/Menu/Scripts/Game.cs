@@ -7,21 +7,22 @@ public class Game : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        ScoreManager.instance.Reset();
     }
 	
 	// Update is called once per frame
 	void Update () {
-        scoreText.text = "Score: " + ScoreManager.instance.score;
 	}
 
     public void ScoreTenPoints()
     {
+        Debug.Log("ScoreTenPoints called from " + name);
         ScoreManager.instance.Add(10);
+        scoreText.text = "Score: " + ScoreManager.instance.score;
     }
 
     public void GameOver()
     {
+        Debug.Log("GameOver called from " + name);
         ScoreManager.instance.UpdateHighScores();
     }
 }
