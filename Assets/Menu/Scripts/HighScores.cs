@@ -14,11 +14,12 @@ public class HighScores : MonoBehaviour {
     private void SetHighScoreText()
     {
         HighScoreText.text = "";
-        int[] hs = ScoreManager.instance.highScores;
+        ScoreManager.HighScore[] hs = ScoreManager.instance.highScores;
+
         for (int i = 0; i < hs.Length; i++)
         {
 
-            HighScoreText.text += string.Format("{0,3}", i + 1) + ".  " + string.Format("{0,10}", hs[i]) + "\n";
+            HighScoreText.text += string.Format("{0,5}", i + 1) + ".  " + string.Format("{0,10}", hs[i].score) + "   " + hs[i].name + "\n";
         }
     }
 

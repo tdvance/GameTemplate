@@ -3,8 +3,23 @@ using System.Collections;
 using System;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Runtime.Serialization;
 
 public class ScoreManager : MonoBehaviour {
+
+    [Serializable]
+    public class HighScore :IComparable
+    {
+        public string name;
+        public int score;
+
+        public int CompareTo(object obj)
+        {
+            HighScore h = obj as HighScore;
+            return score.CompareTo(h.score);
+        }
+
+    };
 
     private int _score = 0;
 
@@ -14,8 +29,8 @@ public class ScoreManager : MonoBehaviour {
 
     //high score list
     public int maxHighScores = 10;
-    private int[] _highScores;
-    
+    private HighScore[] _highScores;
+
     // Use this for initialization
     void Start()
     {
@@ -24,7 +39,7 @@ public class ScoreManager : MonoBehaviour {
         {
             maxHighScores = 1;//TODO allow disabling high scores
         }
-        _highScores = new int[maxHighScores];
+        _highScores = new HighScore[maxHighScores];
 
         UpdateHighScores();
     }
@@ -35,7 +50,7 @@ public class ScoreManager : MonoBehaviour {
 
     }
 
-    public int[] highScores
+    public HighScore[] highScores
     {
         get
         {
@@ -63,7 +78,9 @@ public class ScoreManager : MonoBehaviour {
         Debug.Log("Clearing high scores");
         for (int i = 0; i < highScores.Length; i++)
         {
-            highScores[i] = 0;
+            highScores[i] = new HighScore();
+            highScores[i].score = 0;
+            highScores[i].name = "Nobody";
         }
         if (File.Exists(highScoresPath))
         {
@@ -78,25 +95,40 @@ public class ScoreManager : MonoBehaviour {
 
         //load high score list if it exists
         BinaryFormatter bf = new BinaryFormatter();
-        int[] hs;
+        HighScore[] hs;
         if (File.Exists(highScoresPath))
         {
             //load high scores
             Debug.Log("Loading previous high scores");
             FileStream infile = File.Open(highScoresPath, FileMode.Open);
-            hs = (int[])bf.Deserialize(infile);
+            hs = (HighScore[])bf.Deserialize(infile);
             infile.Close();
             Debug.Log("Loaded: " + hs);
         }
         else
         {
-            hs = new int[1];
+            hs = new HighScore[highScores.Length];
+            for (int i = 0; i < hs.Length; i++)
+            {
+                hs[i] = new HighScore();
+                hs[i].score = 0;
+                hs[i].name = "Nobody";
+            }
         }
+
         //merge with current high scores and current score
-        int[] allScores = new int[highScores.Length + hs.Length + 1];
+        HighScore[] allScores = new HighScore[highScores.Length + hs.Length + 1];
         Array.Copy(hs, allScores, hs.Length);
         Array.Copy(highScores, 0, allScores, hs.Length, highScores.Length);
-        allScores[allScores.Length - 1] = score;
+        allScores[allScores.Length - 1] = new HighScore();
+        allScores[allScores.Length - 1].score = score;
+        if (score > 0)
+        {
+            allScores[allScores.Length - 1].name = GetPlayerName();
+        }else
+        {
+            allScores[allScores.Length - 1].name = "Nobody";
+        }
         Array.Sort(allScores);
         Array.Reverse(allScores);
         Array.Copy(allScores, highScores, highScores.Length);
@@ -107,6 +139,11 @@ public class ScoreManager : MonoBehaviour {
         bf.Serialize(file, highScores);
         file.Close();
         Debug.Log("High scores saved to " + highScoresPath);
+    }
+
+    private string GetPlayerName()
+    {
+        return Environment.UserName;
     }
 
     public void Reset()
@@ -132,7 +169,8 @@ public class ScoreManager : MonoBehaviour {
         }
     }
 
-   
+  
+
     void Awake()
     {
         if (_instance == null)
