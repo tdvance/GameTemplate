@@ -143,7 +143,7 @@ public class ScoreManager : MonoBehaviour {
 
     private string GetPlayerName()
     {
-        return Environment.UserName;
+        return OptionsManager.instance.getPlayerName();
     }
 
     public void Reset()
