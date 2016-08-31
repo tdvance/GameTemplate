@@ -62,7 +62,13 @@ public class MusicManager : MonoBehaviour {
                 Debug.Log("Playing music " + newLevelMusic);
                 audioSource.Stop();//TODO fade out instead of dead stop
                 audioSource.clip = newLevelMusic;
-                audioSource.loop = true;
+                if (newLevelMusic.length >= 10f) //heuristic--less than 10 seconds, assume not meant to be looped.
+                {
+                    audioSource.loop = true;
+                }else
+                {
+                    audioSource.loop = false;
+                }
                 audioSource.Play();
                 currentLevelMusic = newLevelMusic;
             }
